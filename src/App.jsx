@@ -1,121 +1,93 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
-
+import { useEffect, useState } from "react"
+import "./App.css"
+import axios from "axios"
 function App() {
-  const [count, setCount] = useState(0)
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+  const [students, setStudents] = useState([])
+  const [id, setId] = useState('')
+  const [name, setName] = useState('')
+  const [course, setCourse] = useState('')
+  const [isEdit, setIsEdit] = useState(false)
 
-      <div className="ticks"></div>
+  console.log(id, name, course)
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+  async function getAllStudents() {
+    const response = await axios.get('http://127.0.0.1:8000/students')
+    setStudents(response.data)
+  }
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+  useEffect(() => {
+    getAllStudents()
+  }, [])
+  
+  function storeId(event) {
+    setId(event.target.value)
+  }
+  function storeName(event) {
+    setName(event.target.value)
+  }
+  function storeCourse(event) {
+    setCourse(event.target.value)
+  }
+  async function sendData() {
+    if(isEdit === false) {
+      const response = await axios.post('http://127.0.0.1:8000/students', {
+        id: id,
+        name: name,
+        course: course
+      })
+      window.alert(response.data.detail)
+    } else {
+      const response = await axios.put(`http://127.0.0.1:8000/students/${id}`, {
+        id: id,
+        name: name,
+        course: course
+      })
+      window.alert(response.data.detail)
+    }
+  }
+
+  function edit(student) {
+    setId(student.id)
+    setName(student.name)
+    setCourse(student.course)
+    setIsEdit(true)
+  }
+
+  return(
+    <div className="container">
+      <h1>Student Management System</h1>
+      <form className="student-form">
+        <input type="number" placeholder="ID" onChange={storeId} value={id}/>
+        <input type="text" placeholder="Name" onChange={storeName} value={name}/>
+        <input type="text" placeholder="Course" onChange={storeCourse} value={course}/>
+        <button onClick={sendData}>{ isEdit ? 'Update' : 'Submit'}</button>
+      </form>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Course</th>
+            <th>Edit</th>
+            <th>Delete</th>
+          </tr>
+        </thead>
+        <tbody>
+          { students.map((student) => {
+            return(
+              <tr key={student.id}>
+                <td>{student.id}</td>
+                <td>{student.name}</td>
+                <td>{student.course}</td>
+                <td><button className="edit-btn" onClick={() => {edit(student)}}>Edit</button></td>
+                <td><button className="delete-btn">Delete</button></td>
+              </tr>
+            )
+          }) }
+        </tbody>
+      </table>
+    </div>
   )
 }
 
